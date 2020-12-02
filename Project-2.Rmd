@@ -83,54 +83,65 @@ attach(group.data)
 
 # Simple Linear Regression
 
-Typing words outside of chunks will be the paragraphs that show up in the PDF.
+Our first goal for the data was to determine whether or not there was a linear relationship between a professors perceived beauty and their class evaluation scores. When looking at the scatter plot and corresponding regression line, there appears to be a weak relationship. 
 
-```{r, echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"}
+```{r, include=FALSE}
 #scatter plot of evaluation score against beauty
 plot(data$eval~data$beauty)
 
 #no clear linear pattern
 ```
 
-```{r, echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"}
+```{r, include=FALSE}
 #now time to re-plot beauty and eval to see if there is a linear relationship
 plot(evals~beaut, data = group.data)
 
 #seems to be more of a linear relationship
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"}
 slr.result <- lm(evals~beaut, data = group.data)
-anova(slr.result)
+plot(evals~beaut, data = group.data, xlab = 'Beauty Rating', ylab = 'Evaluation Score', main = 'Evaluation Score Against Beauty with Regression Line')
+abline(slr.result, col = 'red')
+```
+The summary statistics for the regression line show that the coefficient is only significant at a 90% confidence level. That would be an acceptable confidence level for some industries, but the more disturbing statistic is the $R^2$ value. The closer the $R^2$ value is to zero, the more likely it is that the regression line does not fit the data well. Since the $R^2$ value is 3.85%, we can conclude that the regression model does not predict the variation in the data very well at all. 
+
+```{r, echo=FALSE, fig.center = 'center'}
+summary(slr.result)
 #the coefficient is only significant at alpha = .10
 ```
 
-```{r, echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"}
-plot(evals~beaut, data = group.data)
-abline(slr.result, col = 'red')
-```
+```{r, include=FALSE}
+#######################################################################################################
+## Since the model does not fit the data well, the assumptions do not necessarily need to be reported.
+#######################################################################################################
 
-```{r, echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"}
 plot(slr.result$residuals~slr.result$fitted.values)
 abline(h=0, col='red')
 #constant variance assumptions seems to be met
-```
 
-```{r, echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"}
 acf(slr.result$residuals)
 #correlation issue at lag = 5
-```
 
-```{r, echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"}
 qqnorm(slr.result$residuals)
 qqline(slr.result$residuals, col="red")
 #linearity assumption is not quite met, but is the least important
-```
 
-```{r, include=FALSE}
 #confidence interval for non-transformed data
 confint(slr.result, level = 0.95)
 ```
+
+Since the original question did not produce a satisfactory model, we were curious if there were any simple linear regression models that predicted the evaluation score better than beauty rating. After running all subsets of simple linear regression, only two models had significant predictors: evaluation score against the percentage of upper division classes and number of students that took the evaluation. However, similarly to the beauty model, the $R^2$ value shows that the regression equation accounts for almost none of the variation in the data.
+
+```{r, include=FALSE}
+alt.slr1 <- lm(evals~age)
+summary(alt.slr1)
+alt.slr2 <- lm(evals~division)
+summary(alt.slr2)
+alt.slr3 <- lm(evals~students)
+summary(alt.slr3)
+```
+
 
 
 # Multiple Linear Regression
@@ -300,7 +311,9 @@ COOKS[COOKS>qf(0.5,p,n-p)]
 
 # Logistic Regression
 
-```{r, include=FALSE}
+Another one of our questions was whether or not age, beauty rating, and the percentage of upper level classes taught could predict the gender of a professor. Since gender is a binomial response variable, we used a logistic regression model. However when fitting the model, the regression coefficients do not seem to be significant. To test this, we used a ____ test with $H_0: \beta_{age}=\beta_{beauty} = \beta_{division} = 0$ and $H_1:$ at least $\beta_{age}$, $\beta_{beauty}$, or $\beta_{division}$ does not equal zero. The p-value for the test came out to be 0.1078. Thus we fail to reject the null hypothesis with 95% confidence and conclude that the three coefficients are zero.
+
+```{r, echo=FALSE}
 #using gender as the response variable and age, beauty, and division as predictors
 log.result <- glm(gender~age+beaut+division, family='binomial', data= group.data)
 summary(log.result)
@@ -313,7 +326,9 @@ summary(log.result)
 #fail to reject the null hypothesis, all the coefficients are zero
 ```
 
-```{r, include=FALSE}
+With this result, we were not satisfied. Therefore we came up with a new query regarding the ability to predict a professor's tenure status using the other predictors in the model. The summary output for this model is slightly more promising with some predictors appearing to be significant. We ran a ___ test to be sure at least one of the coefficients was non-zero and a p-value of 0.0078 confirms that.
+
+```{r, echo=FALSE}
 #can a subset of the variables predict whether the professor is tenured?
 log.result2 <- glm(tenure~evals+age+gender+minority+native+division, family='binomial', data=group.data)
 summary(log.result2)
@@ -325,6 +340,8 @@ summary(log.result2)
 
 #reject the null hypothesis, at least one coefficient is not zero
 ```
+
+To help narrow down the necessary coefficients, we used forward, backward, and step-wise model selection techniques. All three techniques came up with the same model: evaluation being predicted by age and evaluation score. Although this is an interesting result, the summary shows that the age predictor may not be significant. Therefore we ran a ____ test to see whether or not the age coefficient was zero. The corresponding p-value for the test was 0.4333, meaning we can drop age from the regression model since it is zero.
 
 ```{r, include=FALSE}
 #using forward model selection to find the best model
@@ -341,7 +358,7 @@ step(regnull, scope=list(lower=regnull, upper=regfull), direction="both")
 
 ```
 
-```{r, include=FALSE}
+```{r, echo=FALSE}
 #all selection methods arrive at the same conclusion
 bestlog.result <- glm(tenure~evals+age, family='binomial', data=group.data)
 summary(bestlog.result)
@@ -355,15 +372,21 @@ reduced <- glm(tenure~evals, family='binomial', data=group.data)
 #fail to reject the null hypothesis, thus we can safely remove age as a predictor
 ```
 
-```{r,include=FALSE}
+With the zero coefficient removed, our final log regression model for predicting the tenure of a professor was down to the evaluation score. The summary output shows the coefficient is significant at a 90% confidence level
+
+```{r,echo=FALSE}
 finalLog.result <- glm(tenure~evals, family='binomial', data=group.data)
 summary(finalLog.result)
+```
 
+```{r, include=FALSE}
 #hypothesis test to see if the result is significant
 1-pchisq(finalLog.result$null.deviance-finalLog.result$deviance,1)
 ```
 
-## Model Validation
+## Log Regression Model Validation
+
+Since we have a regression model
 
 ```{r, include=FALSE}
 #set seed
@@ -389,7 +412,7 @@ roc_result<-performance(rates,measure="tpr", x.measure="fpr")
 
 ```{r, echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"}
 ##plot ROC curve and overlay the diagonal line for random guessing
-plot(roc_result, main="ROC Curve for Titanic")
+plot(roc_result, main="ROC Curve for Tenure")
 lines(x = c(0,1), y = c(0,1), col="red")
 ```
 
@@ -402,7 +425,7 @@ auc
 #auc is 0.7616959 which is halfway between perfect (1.0) and random (0.5)
 ```
 
-```{r, include=FALSE}
+```{r, echo=FALSE}
 ##confusion matrix. Actual values in the rows, predicted classification in cols
 table(test$tenure, preds>0.5)
 

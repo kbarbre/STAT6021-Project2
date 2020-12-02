@@ -58,51 +58,58 @@ attach(group.data)
 
 
 
-## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
+## ---- include=FALSE-----------------------------------------------------------
 #scatter plot of evaluation score against beauty
 plot(data$eval~data$beauty)
 
 #no clear linear pattern
 
 
-## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
+## ---- include=FALSE-----------------------------------------------------------
 #now time to re-plot beauty and eval to see if there is a linear relationship
 plot(evals~beaut, data = group.data)
 
 #seems to be more of a linear relationship
 
 
-## ---- echo=FALSE--------------------------------------------------------------
-slr.result <- lm(evals~beaut, data = group.data)
-anova(slr.result)
-#the coefficient is only significant at alpha = .10
-
-
 ## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
-plot(evals~beaut, data = group.data)
+slr.result <- lm(evals~beaut, data = group.data)
+plot(evals~beaut, data = group.data, xlab = 'Beauty Rating', ylab = 'Evaluation Score', main = 'Evaluation Score Against Beauty with Regression Line')
 abline(slr.result, col = 'red')
 
 
-## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
+## ---- echo=FALSE, fig.center = 'center'---------------------------------------
+summary(slr.result)
+#the coefficient is only significant at alpha = .10
+
+
+## ---- include=FALSE-----------------------------------------------------------
+#######################################################################################################
+## Since the model does not fit the data well, the assumptions do not necessarily need to be reported.
+#######################################################################################################
+
 plot(slr.result$residuals~slr.result$fitted.values)
 abline(h=0, col='red')
 #constant variance assumptions seems to be met
 
-
-## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
 acf(slr.result$residuals)
 #correlation issue at lag = 5
 
-
-## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
 qqnorm(slr.result$residuals)
 qqline(slr.result$residuals, col="red")
 #linearity assumption is not quite met, but is the least important
 
-
-## ---- include=FALSE-----------------------------------------------------------
 #confidence interval for non-transformed data
 confint(slr.result, level = 0.95)
+
+
+## ---- include=FALSE-----------------------------------------------------------
+alt.slr1 <- lm(evals~age)
+summary(alt.slr1)
+alt.slr2 <- lm(evals~division)
+summary(alt.slr2)
+alt.slr3 <- lm(evals~students)
+summary(alt.slr3)
 
 
 ## ---- include=FALSE-----------------------------------------------------------
@@ -264,7 +271,7 @@ COOKS<-cooks.distance(result1)
 COOKS[COOKS>qf(0.5,p,n-p)]
 
 
-## ---- include=FALSE-----------------------------------------------------------
+## ---- echo=FALSE--------------------------------------------------------------
 #using gender as the response variable and age, beauty, and division as predictors
 log.result <- glm(gender~age+beaut+division, family='binomial', data= group.data)
 summary(log.result)
@@ -277,7 +284,7 @@ summary(log.result)
 #fail to reject the null hypothesis, all the coefficients are zero
 
 
-## ---- include=FALSE-----------------------------------------------------------
+## ---- echo=FALSE--------------------------------------------------------------
 #can a subset of the variables predict whether the professor is tenured?
 log.result2 <- glm(tenure~evals+age+gender+minority+native+division, family='binomial', data=group.data)
 summary(log.result2)
@@ -305,7 +312,7 @@ step(regnull, scope=list(lower=regnull, upper=regfull), direction="both")
 
 
 
-## ---- include=FALSE-----------------------------------------------------------
+## ---- echo=FALSE--------------------------------------------------------------
 #all selection methods arrive at the same conclusion
 bestlog.result <- glm(tenure~evals+age, family='binomial', data=group.data)
 summary(bestlog.result)
@@ -319,10 +326,12 @@ reduced <- glm(tenure~evals, family='binomial', data=group.data)
 #fail to reject the null hypothesis, thus we can safely remove age as a predictor
 
 
-## ----include=FALSE------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 finalLog.result <- glm(tenure~evals, family='binomial', data=group.data)
 summary(finalLog.result)
 
+
+## ---- include=FALSE-----------------------------------------------------------
 #hypothesis test to see if the result is significant
 1-pchisq(finalLog.result$null.deviance-finalLog.result$deviance,1)
 
@@ -351,7 +360,7 @@ roc_result<-performance(rates,measure="tpr", x.measure="fpr")
 
 ## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
 ##plot ROC curve and overlay the diagonal line for random guessing
-plot(roc_result, main="ROC Curve for Titanic")
+plot(roc_result, main="ROC Curve for Tenure")
 lines(x = c(0,1), y = c(0,1), col="red")
 
 
@@ -364,7 +373,7 @@ auc
 #auc is 0.7616959 which is halfway between perfect (1.0) and random (0.5)
 
 
-## ---- include=FALSE-----------------------------------------------------------
+## ---- echo=FALSE--------------------------------------------------------------
 ##confusion matrix. Actual values in the rows, predicted classification in cols
 table(test$tenure, preds>0.5)
 
