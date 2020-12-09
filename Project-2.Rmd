@@ -514,4 +514,8 @@ abline(v=log(bestlam.lasso), lty=2)
 legend("bottomright", lwd = 1, col = 1:6, legend = colnames(x), cex = .7)
 ```
 
+```{r, echo=False}
+#This is a test
+```
+
 
