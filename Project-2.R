@@ -35,14 +35,30 @@ axis(1, at = bp, cex.axis=1.2, labels = prof_rated_again$n)
 
 
 ## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
+#########################
 #boxplot on evals without the transformation
 
 par(mfrow=c(1,5))
-boxplot(data$eval~data$gender, ylab= 'Evaluation Score', xlab= 'Gender')
-boxplot(data$eval~data$minority, ylab= 'Evaluation Score', xlab= 'Minority')
-boxplot(data$eval~data$native, ylab= 'Evaluation Score', xlab= 'Native')
-boxplot(data$eval~data$tenure, ylab= 'Evaluation Score', xlab= 'Tenure')
-boxplot(data$eval~data$division, ylab= 'Evaluation Score', xlab= 'Division')
+
+
+
+boxplot(data$eval~data$gender, ylab= 'Evaluation Score', xlab= 'Gender', main= 'Boxplot by Gender')
+#Based on the results in the above figure, we can conclude that on average the true mean value of evaluation score is higher for women than more men.
+
+boxplot(data$eval~data$minority, ylab= 'Evaluation Score', xlab= 'Minority', main= 'Boxplot by Minority')
+#Based on the box plot about, we can conclude that the evaluation score for a minority is slightly lower, on average.
+
+boxplot(data$eval~data$native, ylab= 'Evaluation Score', xlab= 'Native', main= 'Boxplot by Native')
+#Based on the box plot, we can conclude that a professor whose native language is English will have a slightly higher evaluation score. 
+
+boxplot(data$eval~data$tenure, ylab= 'Evaluation Score', xlab= 'Tenure', main= 'Boxplot by Tenure')
+#Based on the results, a professor that is not tenured will on average have a slightly higher evaluation score than their counterparts. 
+
+boxplot(data$eval~data$division, ylab= 'Evaluation Score', xlab= 'Division', main= 'Boxplot by Division')
+#Based on this scatter plot, the professors teaching lower level courses will have, on average, a slightly higher evaluation score than the professors teachign upper level course. 
+#However, it should be noted the difference is minimal. 
+
+#################################################
 
 
 ## ---- include=FALSE-----------------------------------------------------------
@@ -83,7 +99,7 @@ summary(slr.result)
 #the coefficient is only significant at alpha = .10
 
 
-## ---- include=FALSE-----------------------------------------------------------
+## -----------------------------------------------------------------------------
 #######################################################################################################
 ## Since the model does not fit the data well, the assumptions do not necessarily need to be reported.
 #######################################################################################################
@@ -112,7 +128,7 @@ alt.slr3 <- lm(evals~students)
 summary(alt.slr3)
 
 
-## ---- include=FALSE-----------------------------------------------------------
+###################### Model building steps 
 ##intercept only model
 regnull <- lm(evals~1, data=group.data)
 ##model with all predictors
@@ -126,7 +142,6 @@ step(regnull, scope=list(lower=regnull, upper=regfull), direction="both")
 #The model created is evals ~division + beaut + gender + tenure + native by both the forward and step-wise
 
 
-## ---- include=FALSE-----------------------------------------------------------
 #########################################################
 #model used is the one created by forward and step-wise 
 #Multpile linear regression 
@@ -137,79 +152,109 @@ fullresult<- lm(evals ~division + beaut + gender + tenure + native+age+students+
 summary(fullresult)
 anova(fullresult)
 
+#This is the full model that is the best R^2
+fullresult_2<- lm(evals ~division + beaut + gender + tenure + native+students+allstudents+minority)
+summary(fullresult_2)
+anova(fullresult_2)
 
-## ---- include=FALSE-----------------------------------------------------------
+plot(fullresult_2$fitted.values,fullresult_2$residuals, main="Plot of Residuals against Fitted Values for Model 1")
+abline(h=0,col="red")
+acf_1<-acf(fullresult_2$residuals)
+print(acf_1)
+qqnorm(fullresult_2$residuals)
+qqline(fullresult_2$residuals, col="red")
+
+
+press <- sum((fullresult_2$residuals/(1-(lm.influence(fullresult_2)$hat)))^2)
+r2.pred1 <- 1 - (press/(1.3268+0.6342+1.1092+0.7399+0.4658+0.2125+0.7777+0.0265+14.4819))
+#Best R^2 model
+print(r2.pred1)
+
+#This is the full model that is the best Adjusted R^2
+fullresult_3<- lm(evals ~division + beaut + gender + tenure + native+students+allstudents)
+summary(fullresult_3)
+anova(fullresult_3)
+
+plot(fullresult_3$fitted.values,fullresult_3$residuals, main="Plot of Residuals against Fitted Values for Model 1")
+abline(h=0,col="red")
+acf_1<-acf(fullresult_3$residuals)
+print(acf_1)
+qqnorm(fullresult_3$residuals)
+qqline(fullresult_3$residuals, col="red")
+
+press <- sum((fullresult_3$residuals/(1-(lm.influence(fullresult_3)$hat)))^2)
+r2.pred2 <- 1 - (press/(1.3268+0.6342+1.1092+0.7399+0.4658+0.2125+0.7777+14.5084))
+#Model 3
+print(r2.pred2)
+
 #result1 is the model created by the Forward and step-wise functions 
 result1<- lm(evals ~division + beaut + gender + tenure + native)
 summary(result1)
 anova(result1)
 
+plot(result1$fitted.values,result1$residuals, main="Plot of Residuals against Fitted Values for Model 1")
+abline(h=0,col="red")
+acf_1<-acf(result1$residuals)
+print(acf_1)
+qqnorm(result1$residuals)
+qqline(result1$residuals, col="red")
 
-## ---- echo=FALSE--------------------------------------------------------------
+press <- sum((result1$residuals/(1-(lm.influence(result1)$hat)))^2)
+r2.pred3 <- 1 - (press/(1.3268+0.6342+1.1092+0.7399+0.4658+15.4986))
+#Model 2 
+print(r2.pred3)
+
+
+#result1 is the model created by the backward functions 
+result3<- lm(evals ~beaut + gender + native + tenure + students + allstudents + division)
+summary(result3)
+anova(result3)
+
 ##Partial F test for reduced model created by model building steps 
 anova(result1, fullresult)
 
-
-## ---- include=FALSE-----------------------------------------------------------
 #Result2 is the model but we in addition drop native from the result1 model 
 result2<-lm(evals~division+beaut+gender+tenure)
 summary(result2)
 anova(result2)
 
-
-## ---- echo=FALSE--------------------------------------------------------------
 ##Partial F-test to see if we can drop native
 anova(result2,fullresult)
 
 #Based on the partial F-test the final model is evals~division+beaut+gender+tenure
 
 
-## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
-#########################################################################
-######################################################################
-###Checking regression assumptions are met for Model 1evals ~division + beaut + gender + tenure + native 
-##residual plot
-plot(result1$fitted.values,result1$residuals, main="Plot of Residuals against Fitted Values for Model 1")
-abline(h=0,col="red")
+##################################################################
+###################################################################
+#Looking at the best regression 
+##perform all possible regressions (1st order)
+allreg <- regsubsets(evals ~., data=group.data, nbest=9)
+
+##create a "data frame" that stores the predictors in the various models considered as well as their various criteria
+best <- as.data.frame(summary(allreg)$outmat)
+best$p <- as.numeric(substr(rownames(best),1,1))+1
+best$r2 <- summary(allreg)$rsq
+best$adjr2 <- summary(allreg)$adjr2
+best$mse <- (summary(allreg)$rss)/(dim(data)[1]-best$p)
+best$cp <- summary(allreg)$cp
+best$bic <- summary(allreg)$bic
+best
+
+##sort by various criteria
+best[order(best$r2),]
+best[order(best$adjr2),]
+best[order(best$mse),]
+best[order(best$cp),]
+best[order(best$bic),]
 
 
-## ----echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"-----------
-##acf plot of residuals
-acf(result1$residuals)
 
 
-## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
-##qq plot of residuals
-qqnorm(result1$residuals)
-qqline(result1$residuals, col="red")
-
-
-## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
-##########################################################################
-######################################################################
-###Checking regression assumptions are met for Model 1evals ~division + beaut + gender + tenure
-##residual plot
-plot(result2$fitted.values,result2$residuals, main="Plot of Residuals against Fitted Values for Model 2")
-abline(h=0,col="red")
-
-
-## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
-##acf plot of residuals
-acf(result2$residuals)
-
-
-## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
-##qq plot of residuals
-qqnorm(result2$residuals)
-qqline(result2$residuals, col="red")
-
-
-## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
 ######################################################
 ####################################################33
-#Looking for potential outliers
+#Looking for potential Leverage points
 ##residuals
-#Based on model 1/reduced1 
+#Based on forward/step-wise model/Model 2 
 
 residuals1<-result1$residuals 
 
@@ -222,10 +267,8 @@ ext.student.res<-rstudent(result1)
 par(mfrow=c(1,3))
 plot(result1$fitted.values,residuals1,main="Residuals")
 plot(result1$fitted.values,student.res,main="Studentized Residuals")
-plot(result1$fitted.values,ext.student.res,main="Externally Studentized Residuals")
+plot(result1$fitted.values,ext.student.res,main="Externally  Studentized Residuals")
 
-
-## ---- include=FALSE-----------------------------------------------------------
 n<-length(evals)
 p<-6 #one intercept and 5 predictors 
 
@@ -234,14 +277,10 @@ qt(1-0.05/(2*n), n-p-1)
 
 sort(ext.student.res)
 
-
-## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
 plot(ext.student.res,main="Externally Studentized Residuals", ylim=c(-4,4))
 abline(h=qt(1-0.05/(2*n), n-p-1), col="red")
 abline(h=-qt(1-0.05/(2*n), n-p-1), col="red")
 
-
-## ---- include=FALSE-----------------------------------------------------------
 ext.student.res[abs(ext.student.res)>qt(1-0.05/(2*n), n-p-1)]
 
 ##leverages
@@ -250,13 +289,11 @@ lev<-lm.influence(result1)$hat
 sort(lev)
 2*p/n
 
-
-## ---- echo=FALSE,fig.height = 4, fig.width = 6, fig.align = "center"----------
 plot(lev, main="Leverages", ylim=c(0,0.4))
 abline(h=2*p/n, col="red")
 
-
-## ---- include=FALSE-----------------------------------------------------------
+##identify data points on plot
+identify(lev)
 
 lev[lev>2*p/n]
 
@@ -270,6 +307,172 @@ DFBETAS[abs(DFBETAS)>2/sqrt(n)]
 COOKS<-cooks.distance(result1)
 COOKS[COOKS>qf(0.5,p,n-p)]
 
+######################################################
+####################################################33
+#Looking for potential leverage points 
+##residuals
+#Based on backward/best adjusted R2 
+
+residuals3<-result3$residuals 
+
+##studentized residuals
+student.res3<-rstandard(result3) 
+
+##externally studentized residuals
+ext.student.res3<-rstudent(result3) 
+
+par(mfrow=c(1,3))
+plot(result3$fitted.values,residuals3,main="Residuals")
+plot(result3$fitted.values,student.res3,main="Studentized Residuals")
+plot(result3$fitted.values,ext.student.res3,main="Externally  Studentized Residuals")
+
+n2<-length(evals)
+p2<-9 #one intercept and 8 predictors 
+
+##critical value using Bonferroni procedure
+qt(1-0.05/(2*n2), n2-p2-1)
+
+sort(ext.student.res3)
+
+plot(ext.student.res3,main="Externally Studentized Residuals", ylim=c(-4,4))
+abline(h=qt(1-0.05/(2*n), n-p-1), col="red")
+abline(h=-qt(1-0.05/(2*n), n-p-1), col="red")
+
+ext.student.res3[abs(ext.student.res3)>qt(1-0.05/(2*n2), n2-p2-1)]
+
+##leverages
+lev3<-lm.influence(result3)$hat 
+
+sort(lev3)
+2*p2/n2
+
+plot(lev3, main="Leverages", ylim=c(0,0.4))
+abline(h=2*p2/n2, col="red")
+
+##identify data points on plot
+identify(lev3)
+
+lev3[lev3>2*p2/n2]
+
+##influential observations
+DFFITS2<-dffits(result3)
+DFFITS2[abs(DFFITS2)>2*sqrt(p2/n2)]
+
+DFBETAS2<-dfbetas(result3)
+DFBETAS2[abs(DFBETAS2)>2/sqrt(n2)]
+
+COOKS2<-cooks.distance(result3)
+COOKS2[COOKS2>qf(0.5,p2,n2-p2)]
+
+#### VIF ####
+backwards.model<-lm(evals ~ beaut + gender + native + tenure + students + allstudents, data=group.data)
+vif(backwards.model)
+
+###########################################################################
+#Check For Interactions for Gender
+#Subset data into male and female
+male.data<-subset(group.data,gender=="male") 
+female.data<-subset(group.data,gender=="female") 
+
+#Build regressions for each subset of data
+male.reg<-lm(evals~beaut,data=male.data)
+female.reg<-lm(evals~beaut,data=female.data)
+
+#Plot the regressions
+plot(group.data$beaut,group.data$evals, main="Evaluation against Beauty Rating, by Gender", ylab = "Teacher Evaluation", xlab = "Beauty Score")
+points(male.data$beaut,male.data$evals, pch=2, col="blue") 
+points(female.data$beaut,female.data$evals, pch=12, col="red")
+abline(male.reg,lty=1, col="blue")
+abline(female.reg,lty=2, col="red") 
+legend("topleft", c("Male","Female"), lty=c(1,2), pch=c(2,12), col=c("blue","red")) 
+
+##fit regression with interaction between the 2 predictors
+result.gender<-lm(evals~beaut*gender, data=group.data)
+summary(result)
+
+##fit regression with no interaction and test if we need interaction
+gender.reduced<-lm(evals~beaut+gender, data=group.data)
+anova(gender.reduced,result.gender) #Large p-value, means we don't need interaction
+
+#####################################################################
+#Check For Interactions for tenure
+#Subset data into tenured and not tenured
+tenure1<-subset(group.data,tenure=="yes") 
+tenure2<-subset(group.data,tenure=="no") 
+
+#Build regressions for each subset of data
+tenure.reg1<-lm(evals~beaut,data=tenure1)
+tenure.reg2<-lm(evals~beaut,data=tenure2)
+
+#Plot the regressions
+plot(group.data$beaut,group.data$evals, main="Evaluation against Beauty Rating, by Tenure", ylab = "Teacher Evaluation", xlab = "Beauty Score")
+points(tenure1$beaut,tenure1$evals, pch=2, col="blue") 
+points(tenure2$beaut,tenure2$evals, pch=12, col="red")
+abline(tenure.reg1,lty=1, col="blue")
+abline(tenure.reg2,lty=2, col="red") 
+legend("topleft", c("Yes","No"), lty=c(1,2), pch=c(1,12), col=c("blue","red")) 
+
+##fit regression with interaction between the 2 predictors
+result.tenure<-lm(evals~beaut*tenure, data=group.data)
+summary(result.tenure)
+
+##fit regression with no interaction and test if we need interaction
+reduced.tenure<-lm(evals~beaut+tenure, data=group.data)
+anova(reduced.tenure,result.tenure) #Large p-value, means we don't need interaction
+
+######################################################################
+#Check for Interactions for Minority
+#Subset data into minority and not minority
+minority1<-subset(group.data,minority=="yes") 
+minority2<-subset(group.data,minority=="no") 
+
+#Build regressions for each subset of data
+minority.reg1<-lm(evals~beaut,data=minority1)
+minority.reg2<-lm(evals~beaut,data=minority2)
+
+#Plot the regressions
+plot(group.data$beaut,group.data$evals, main="Evaluation against Beauty Rating, by Minority", ylab = "Teacher Evaluation", xlab = "Beauty Score")
+points(minority1$beaut,minority1$evals, pch=2, col="blue") 
+points(minority2$beaut,minority2$evals, pch=12, col="red")
+abline(minority.reg1,lty=1, col="blue")
+abline(minority.reg2,lty=2, col="red") 
+legend("topleft", c("Yes","No"), lty=c(1,2), pch=c(1,12), col=c("blue","red")) 
+
+##fit regression with interaction between the 2 predictors
+result.minority<-lm(evals~beaut*minority, data=group.data)
+summary(result.minority)
+
+##fit regression with no interaction and test if we need interaction
+reduced.minority<-lm(evals~beaut+minority, data=group.data)
+anova(reduced.minority,result.minority) #Large p-value, means we don't need interaction
+
+#####################################################################
+#Check for Interactions for Native
+#Subset data into native and non native
+native1<-subset(group.data,native=="yes") 
+native2<-subset(group.data,native=="no") 
+
+#Build regressions for each subset of data
+native.reg1<-lm(evals~beaut,data=native1)
+native.reg2<-lm(evals~beaut,data=native2)
+
+#Plot the regressions
+plot(group.data$beaut,group.data$evals, main="Evaluation against Beauty Rating, by Native", ylab = "Teacher Evaluation", xlab = "Beauty Score")
+points(native1$beaut,native1$evals, pch=2, col="blue") 
+points(native2$beaut,native2$evals, pch=12, col="red")
+abline(native.reg1,lty=1, col="blue")
+abline(native.reg2,lty=2, col="red") 
+legend("topleft", c("Yes","No"), lty=c(1,2), pch=c(1,12), col=c("blue","red")) 
+
+##fit regression with interaction between the 2 predictors
+result.native<-lm(evals~beaut*native, data=group.data)
+summary(result.native)
+
+##fit regression with no interaction and test if we need interaction
+reduced.native<-lm(evals~beaut+native, data=group.data)
+anova(reduced.native,result.native) #Large p-value, means we don't need interaction
+
+###############################################################
 
 ## ---- echo=FALSE--------------------------------------------------------------
 #using gender as the response variable and age, beauty, and division as predictors
@@ -277,11 +480,9 @@ log.result <- glm(gender~age+beaut+division, family='binomial', data= group.data
 summary(log.result)
 
 
-## ---- include=FALSE-----------------------------------------------------------
-#test if all 3 coefficients are zero
+## -----------------------------------------------------------------------------
 1-pchisq(log.result$null.deviance-log.result$deviance, 3)
 
-#fail to reject the null hypothesis, all the coefficients are zero
 
 
 ## ---- echo=FALSE--------------------------------------------------------------
@@ -318,12 +519,9 @@ bestlog.result <- glm(tenure~evals+age, family='binomial', data=group.data)
 summary(bestlog.result)
 
 
-## ---- include=FALSE-----------------------------------------------------------
-# since age is not significant, let's check to see if it should be dropped
+## -----------------------------------------------------------------------------
 reduced <- glm(tenure~evals, family='binomial', data=group.data)
 1-pchisq(reduced$deviance-bestlog.result$deviance,1)
-
-#fail to reject the null hypothesis, thus we can safely remove age as a predictor
 
 
 ## ----echo=FALSE---------------------------------------------------------------
@@ -331,9 +529,13 @@ finalLog.result <- glm(tenure~evals, family='binomial', data=group.data)
 summary(finalLog.result)
 
 
-## ---- include=FALSE-----------------------------------------------------------
+## -----------------------------------------------------------------------------
 #hypothesis test to see if the result is significant
 1-pchisq(finalLog.result$null.deviance-finalLog.result$deviance,1)
+
+
+## -----------------------------------------------------------------------------
+exp(-1.4510)
 
 
 ## ---- include=FALSE-----------------------------------------------------------
@@ -374,10 +576,8 @@ auc
 
 
 ## ---- echo=FALSE--------------------------------------------------------------
-##confusion matrix. Actual values in the rows, predicted classification in cols
-table(test$tenure, preds>0.5)
-
-table(test$tenure, preds>0.7)
+table(test$tenure, preds>0.87)
+table(test$tenure, preds>0.88)
 
 
 ## ---- include=FALSE-----------------------------------------------------------
