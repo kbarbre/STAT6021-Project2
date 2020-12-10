@@ -118,19 +118,12 @@ qqline(slr.result$residuals, col="red")
 #confidence interval for non-transformed data
 confint(slr.result, level = 0.95)
 
-
-##BoxPlots 
-group.data <- summarize(group_by(tibble::as_tibble(TeachingRatings), prof), evals = mean(eval), beaut = mean(beauty), age = mean(age), gender = first(gender), age = first(age), minority = first(minority), native = first(native), tenure = first(tenure), students = mean(students), allstudents = mean(allstudents), division = sum(division == 'upper')/(sum(division == 'upper') + sum(division == 'lower')))
-group.data<- subset(group.data, select = -c(prof))
-
 ##BoxCox Before transformation 
 library(MASS)
 boxcox(result.mlr.reduced, lambda = seq(-1,4,0.05))
 #because 1 is not in the 95% quarter- this is indication we need to transform the response variable 
 
 ##BoxCox After transformation 
-library(MASS)
-
 sqr.evals<-group.data.mlr$evals^2
 log.evals<-log(evals)
 
